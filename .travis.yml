@@ -1,23 +1,29 @@
+
+sudo: required
 language: java
+
 jdk:
   - openjdk7
   - oraclejdk7
   - openjdk6
   - oraclejdk8
-env:
-  - MODULES_TO_SKIP=\!aws-java-sdk-osgi
-  - MODULES_TO_SKIP=\!aws-java-sdk-osgi,\!aws-java-sdk-code-generator,\!aws-java-sdk-codegen-maven-plugin
-matrix:
-  exclude:
-    - jdk: openjdk6
-      env: MODULES_TO_SKIP=\!aws-java-sdk-osgi
-    - jdk: openjdk7
-      env: MODULES_TO_SKIP=\!aws-java-sdk-osgi,\!aws-java-sdk-code-generator,\!aws-java-sdk-codegen-maven-plugin
-    - jdk: oraclejdk7
-      env: MODULES_TO_SKIP=\!aws-java-sdk-osgi,\!aws-java-sdk-code-generator,\!aws-java-sdk-codegen-maven-plugin
-    - jdk: oraclejdk8
-      env: MODULES_TO_SKIP=\!aws-java-sdk-osgi,\!aws-java-sdk-code-generator,\!aws-java-sdk-codegen-maven-plugin
 
-install: /bin/true
-sudo: false
-script: mvn install -pl ${MODULES_TO_SKIP}
+
+script:
+  - mvn clean cobertura:cobertura -Dtest=AmazonWebServiceClientTest#connectionManagersAreUnregisteredFromIdleConnectionReaper -DfailIfNoTests=false
+
+before_deploy:
+- tar -zcvf coverage-result.tar.gz /home/travis/build/leusonmario/aws-sdk-java/target/site/cobertura
+
+deploy:
+  provider: releases
+  api_key:
+    secure: "a2M1lw3ZpvOmyzq0qTy2+R2ynHar7BHw8YLEcCUzCE80DLUFPXLB1lfJ9CdoollFqAx20DSnp582UCLPjjcz1F6Wiuq7bRyoYKtAA0ffMb6guEjQJkGU8qiitsvnsUIuV05AaNztm+taWjCRQe5lgSZ9+H2qSg+LDqn3+P0bClMVLA2nybXh3eH72KNG0Uk159TmQfC8P/lq2rJIZHYDKknEBHROBHIU7h+nxEYL5xPNznmnCQs2jOSRj3K3BMNkkPmI45C0g4x/udqrIM+MDTyBl3tkC4tDDv+mBfrJQWlEk+Q4GSmEw2PxJ7e2rZkO1IrbCMTVoL/O3bu3/V3F2KHBVlo1UkMvqvjoZhJ/7KSH7MpuH2uomCKLc/hRZKJHP+ZC0hpDU9OiAfGK5CuXS5tyHDlC2slCsOQ4tWBn0GhXxiqI9pUTX7J6sSjX684LmgXLsN5iwrh6i8hsU4c6jL+IdVNyHZrTXHwpbXzy90sc7UjJqOQRnXPNX6MXDcdOg8FdjNcDw6f345Ku3HBHGN+DKBfaYmyFKcG9yQ5m08VWbBzfdLD9QnWUIoKI05IASnsphxg3Wlpb7rnRYwocry00tWnU8vRx0/JWRjHeiplti2LD/ZQFOuJK778bAG0yqQx4Eo8vqC3sXNuHVRkV20RGjnvb65Zb384G6jiHdWI="
+
+
+  file: coverage-result.tar.gz
+  file_glob: true
+  overwrite: true
+  skip_cleanup: true
+  on:
+    tags: true
